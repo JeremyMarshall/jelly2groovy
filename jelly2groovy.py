@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
   out = open(outputfile, "w")
 
-  out.write('// Namespaces')
+  out.write('// Namespaces\n')
   for k in [key for key in ns.keys() if not key.startswith('{')]:
     out.write('%s = namespace("%s")\n' % (k, ns[k].replace('{', '').replace('}', '')))
   out.write('\n\n')
