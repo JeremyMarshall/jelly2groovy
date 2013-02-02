@@ -74,12 +74,13 @@ def localText(parent) {
 
 
 def generateCode(elem, out, ns, indent) {
-  prefix = ''
-  tag = elem.name()
-  jellyCore = false
-  output = true
+  def prefix = ''
+  def tag = elem.name()
+  def jellyCore = false
+  def doOutput = true
+  def doOpenBrace = true
 
-  if( elem.namespaceURI()) {
+  if( elem.namespaceURI() ) {
     if( elem.namespaceURI() == 'jelly:core' ) {
       jellyCore = true
     }
@@ -109,28 +110,36 @@ def generateCode(elem, out, ns, indent) {
     out.write(') ')
   } else {
     if( tag == 'if' ) {
-      out.write("${'  ' * indent}if(${convertValue(elem.attributes()['test'])}")
+      out.write("${'  ' * indent}if(${convertValue(elem.attributes()['test'])}) ")
     } else if (tag == 'choose') {
-      output = false
+      doOutput = false
+      indent -= 1
     } else if(tag == 'invokeStatic') {
-      out.write("${'  ' * indent}def ${elem.attributes()['var']} = ${elem.attributes()['className']}.${elem.attributes()['method']}")
+      out.write("${'  ' * indent}def ${elem.attributes()['var']} = ${elem.attributes()['className']}.${elem.attributes()['method']}()")
     } else if(tag == 'when') {
-      out.write("${'  ' * indent}if(${convertValue(elem.attributes()['test'])})")
+      out.write("${'  ' * indent}if(${convertValue(elem.attributes()['test'])}) ")
     } else if(tag == 'otherwise') {
       out.write("${'  ' * indent}else")
+    } else if(tag == 'set') {
+      out.write("${'  ' * indent}def ${elem.attributes()['var']} = ${convertValue(elem.attributes()['value'])}")
+    } else if(tag == 'forEach') {
+      out.write("${'  ' * indent}${convertValue(elem.attributes()['items'])}.each() { ${elem.attributes()['var']} -> ")
+      doOpenBrace = false
+    } else {
+      println("Unknown tag: $tag")
     }
   }
     
-  if( output ) {
-    if(elem.children().size() > 0) {
+  if( doOutput ) {
+    if(doOpenBrace && (elem.children().size() > 0) ) {
       out.write('{')
     }
     out.writeLine("")
   }  
 
-  elem.children().each { generateCode(it, out, ns, indent + 1) }
-  
-  if( output && (elem.children().size() > 0) ) {
+  elem.children().each() { child -> generateCode(child, out, ns, indent + 1) }
+    
+  if( doOutput && (elem.children().size() > 0) ) {
     out.writeLine("${'  ' * indent}}")
   }
 }
